@@ -1,0 +1,201 @@
+S1
+
+
+enable
+configure terminal
+
+hostname S1
+no ip domain-lookup
+ip domain-name mixtli.mixtli
+
+! --- Creación de VLANs Base ---
+vlan 10
+ name Administracion
+vlan 20
+ name Servidores
+vlan 30
+ name Publica_Estudiantes
+exit
+
+! --- Spanning-Tree Mode y Prioridades ---
+spanning-tree mode rapid-pvst
+spanning-tree vlan 10,20,30 root primary
+
+! --- Interfaz SVI de Gestion ---
+interface vlan 10
+ description IP de Administracion S1
+ ip address 192.168.1.4 255.255.255.248
+ no shutdown
+ exit
+
+ip default-gateway 192.168.1.1
+
+! --- Enlace Trunk Ascendente al MainRouter ---
+interface GigabitEthernet0/1
+ description Enlace Trunk a MainRouter
+ switchport mode trunk
+ switchport trunk allowed vlan all
+ no shutdown
+ exit
+
+! --- EtherChannel Troncal S1-S2 (Po1) ---
+interface range FastEthernet0/23-24
+ description Trunk EtherChannel hacia S2 (LACP)
+ switchport mode trunk
+ channel-group 1 mode active
+ no shutdown
+ exit
+
+interface port-channel 1
+ description Interconexion Troncal S1-S2
+ switchport mode trunk
+ no shutdown
+ exit
+
+! ============================================================
+! PUERTOS DE SERVIDORES (1 al 10) CON NATIVE VLAN 30
+! ============================================================
+
+! --- Servidor 1 (F0/1 - F0/2) ---
+interface range FastEthernet0/1-2
+ description Servidor 1 - Interfaces Fisicas LACP
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ channel-group 2 mode active
+ no shutdown
+ exit
+
+interface port-channel 2
+ description Trunk Servidor 1 (VLAN 10, 20 y 30)
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ spanning-tree portfast trunk
+ no shutdown
+ exit
+
+! --- Servidor 2 (F0/3 - F0/4) ---
+interface range FastEthernet0/3-4
+ description Servidor 2 - Interfaces Fisicas LACP
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ channel-group 3 mode active
+ no shutdown
+ exit
+
+interface port-channel 3
+ description Trunk Servidor 2 (VLAN 10, 20 y 30)
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ spanning-tree portfast trunk
+ no shutdown
+ exit
+
+! --- Servidor 3 (F0/5 - F0/6) ---
+interface range FastEthernet0/5-6
+ description Servidor 3 - Interfaces Fisicas LACP
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ channel-group 4 mode active
+ no shutdown
+ exit
+
+interface port-channel 4
+ description Trunk Servidor 3 (VLAN 10, 20 y 30)
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ spanning-tree portfast trunk
+ no shutdown
+ exit
+
+! --- Servidor 4 (F0/7 - F0/8) ---
+interface range FastEthernet0/7-8
+ description Servidor 4 - Interfaces Fisicas LACP
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ channel-group 5 mode active
+ no shutdown
+ exit
+
+interface port-channel 5
+ description Trunk Servidor 4 (VLAN 10, 20 y 30)
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ spanning-tree portfast trunk
+ no shutdown
+ exit
+
+! --- Servidor 5 (F0/9 - F0/10) ---
+interface range FastEthernet0/9-10
+ description Servidor 5 - Interfaces Fisicas LACP
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ channel-group 6 mode active
+ no shutdown
+ exit
+
+interface port-channel 6
+ description Trunk Servidor 5 (VLAN 10, 20 y 30)
+ switchport mode trunk
+ switchport trunk native vlan 30
+ switchport trunk allowed vlan 10,20,30
+ spanning-tree portfast trunk
+ no shutdown
+ exit
+
+! ============================================================
+! PUERTOS DE PRUEBA Y SEGURIDAD FINAL
+! ============================================================
+interface FastEthernet0/11
+ description Puerto de Prueba para PC - VLAN 30
+ switchport mode access
+ switchport access vlan 30
+ spanning-tree portfast
+ no shutdown
+ exit
+
+interface range FastEthernet0/12-20
+ description Puertos no asignados - Desactivados por Seguridad
+ shutdown
+ exit
+
+interface range FastEthernet0/21-22
+ description Puertos del Administrador con Port-Security
+ switchport mode access
+ switchport access vlan 10
+ switchport port-security
+ switchport port-security maximum 5
+ switchport port-security violation shutdown
+ switchport port-security mac-address sticky
+ spanning-tree portfast
+ no shutdown
+ exit
+
+! ============================================================
+! CONFIGURACIÓN DE SEGURIDAD, CRIPTOGRAFÍA Y LÍNEAS (AL FINAL)
+! ============================================================
+
+username admin_mixtli privilege 15 password admin_mixtli
+
+line console 0
+ login local
+ logging synchronous
+ exit
+
+line vty 0 15
+ login local
+ transport input ssh
+ exit
+
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+end
+write memory
