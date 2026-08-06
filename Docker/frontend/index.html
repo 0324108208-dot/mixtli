@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mixtli — Tu nube privada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --negro: #000000;
+    --negro-alto: #0d0d0d;
+    --negro-panel: #131110;
+    --dorado: #E8A63C;
+    --dorado-claro: #F5C563;
+    --dorado-tenue: rgba(232, 166, 60, 0.14);
+    --borde: rgba(232, 166, 60, 0.22);
+    --texto: #F5F1E8;
+    --texto-tenue: #8f887a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--negro);
+    color: var(--texto);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .display {
+    font-family: 'Archivo Black', 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+
+  .mono {
+    font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  :focus-visible {
+    outline: 2px solid var(--dorado);
+    outline-offset: 3px;
+  }
+
+  .envoltura {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--borde);
+  }
+  .nav-fila {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .nav-logo img { height: 34px; width: auto; display: block; }
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--texto-tenue);
+  }
+  .nav-links a:hover { color: var(--dorado); }
+  .btn-nav {
+    background: var(--dorado);
+    color: #000;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 10px 22px;
+    border-radius: 3px;
+    transition: background 0.15s ease;
+  }
+  .btn-nav:hover { background: var(--dorado-claro); }
+
+  @media (max-width: 720px) {
+    .nav-links { display: none; }
+  }
+
+  .hero {
+    position: relative;
+    padding: 120px 32px 100px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .resplandor {
+    position: absolute;
+    top: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 900px;
+    background: radial-gradient(circle, var(--dorado-tenue) 0%, rgba(232,166,60,0.04) 40%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero-contenido { position: relative; z-index: 1; }
+  .hero-logo {
+    width: min(560px, 88vw);
+    height: auto;
+    margin: 0 auto 28px;
+    display: block;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dorado);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(34px, 6vw, 68px);
+    line-height: 1.02;
+    margin-bottom: 22px;
+  }
+  .hero-sub {
+    max-width: 560px;
+    margin: 0 auto 40px;
+    color: var(--texto-tenue);
+    font-size: 17px;
+  }
+  .cta-fila {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-primario, .btn-secundario {
+    font-weight: 700;
+    font-size: 15px;
+    padding: 15px 30px;
+    border-radius: 3px;
+    display: inline-block;
+    transition: all 0.15s ease;
+  }
+  .btn-primario {
+    background: var(--dorado);
+    color: #000;
+  }
+  .btn-primario:hover { background: var(--dorado-claro); transform: translateY(-1px); }
+  .btn-secundario {
+    border: 1px solid var(--borde);
+    color: var(--texto);
+  }
+  .btn-secundario:hover { border-color: var(--dorado); color: var(--dorado); }
+
+  .divisor {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 0 0;
+  }
+  .divisor::before, .divisor::after {
+    content: "";
+    height: 1px;
+    width: 64px;
+    background: var(--borde);
+  }
+  .divisor span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--dorado);
+  }
+
+  section { padding: 96px 0; }
+  .encabezado-seccion {
+    text-align: center;
+    max-width: 620px;
+    margin: 0 auto 56px;
+  }
+  .encabezado-seccion .eyebrow { margin-bottom: 14px; }
+  .encabezado-seccion h2 {
+    font-size: clamp(26px, 4vw, 40px);
+    margin-bottom: 14px;
+  }
+  .encabezado-seccion p { color: var(--texto-tenue); font-size: 16px; }
+
+  .grid-capacidades {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--borde);
+    border: 1px solid var(--borde);
+  }
+  .capacidad {
+    background: var(--negro);
+    padding: 34px 26px;
+  }
+  .capacidad .icono {
+    width: 40px; height: 40px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: var(--dorado);
+    font-size: 18px;
+  }
+  .capacidad h3 { font-size: 16px; margin-bottom: 8px; }
+  .capacidad p { font-size: 13.5px; color: var(--texto-tenue); line-height: 1.55; }
+  .capacidad a.enlace-sutil {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dorado);
+    border-bottom: 1px solid transparent;
+  }
+  .capacidad a.enlace-sutil:hover { border-color: var(--dorado); }
+
+  @media (max-width: 780px) {
+    .grid-capacidades { grid-template-columns: 1fr; }
+  }
+
+  .pasos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+  }
+  .paso .numero {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 46px;
+    color: var(--dorado-tenue);
+    -webkit-text-stroke: 1.5px var(--borde);
+    margin-bottom: 18px;
+  }
+  .paso h3 { font-size: 18px; margin-bottom: 10px; }
+  .paso p { color: var(--texto-tenue); font-size: 14.5px; }
+
+  @media (max-width: 760px) {
+    .pasos { grid-template-columns: 1fr; gap: 36px; }
+  }
+
+  .grid-planes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .plan {
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 36px 28px;
+    background: var(--negro-panel);
+    display: flex;
+    flex-direction: column;
+  }
+  .plan.destacado {
+    border-color: var(--dorado);
+    position: relative;
+  }
+  .plan.destacado::before {
+    content: "MÁS ELEGIDO";
+    position: absolute;
+    top: -12px;
+    left: 28px;
+    background: var(--dorado);
+    color: #000;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  .plan h3.display { font-size: 22px; margin-bottom: 6px; }
+  .plan .desc-plan { color: var(--texto-tenue); font-size: 13.5px; margin-bottom: 24px; }
+  .specs { list-style: none; margin-bottom: 28px; flex-grow: 1; }
+  .specs li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(232,166,60,0.1);
+    font-size: 14px;
+  }
+  .specs li span:first-child { color: var(--texto-tenue); }
+  .specs li span:last-child { font-family: "SF Mono", Consolas, monospace; color: var(--texto); }
+  .plan .btn-plan {
+    text-align: center;
+    padding: 13px;
+    border-radius: 3px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid var(--borde);
+  }
+  .plan.destacado .btn-plan { background: var(--dorado); color: #000; border-color: var(--dorado); }
+  .plan:not(.destacado) .btn-plan:hover { border-color: var(--dorado); color: var(--dorado); }
+
+  @media (max-width: 900px) {
+    .grid-planes { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  }
+
+  .seguridad-caja {
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 56px 48px;
+    text-align: center;
+    background: linear-gradient(180deg, var(--negro-panel), var(--negro));
+  }
+  .seguridad-caja h2 { font-size: clamp(24px, 3.4vw, 34px); margin-bottom: 16px; }
+  .seguridad-caja p { color: var(--texto-tenue); max-width: 540px; margin: 0 auto 32px; }
+  .badges {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .badge {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 13px;
+    padding: 8px 16px;
+    border: 1px solid var(--borde);
+    border-radius: 20px;
+    color: var(--dorado);
+  }
+
+  footer {
+    border-top: 1px solid var(--borde);
+    padding: 40px 32px;
+    text-align: center;
+    color: var(--texto-tenue);
+    font-size: 13px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-fila">
+    <div class="nav-logo">
+      <img src="Logo_proyecto_recortado.png" alt="Mixtli">
+    </div>
+    <nav class="nav-links">
+      <a href="#capacidades">Capacidades</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#planes">Planes</a>
+      <!-- Enlace exclusivo para el administrador -->
+      <a href="dashboard.html" style="color: var(--acento); border-bottom: 1px dashed var(--acento);">Admin SIEM</a>
+    </nav>
+    <!-- Botón para el cliente -->
+    <a href="acceso.html" class="btn-nav">Portal Cliente</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="resplandor"></div>
+  <div class="hero-contenido">
+    <img src="Logo_proyecto_recortado.png" alt="Mixtli" class="hero-logo">
+    <div class="eyebrow">Mixtli · náhuatl para "nube"</div>
+    <h1 class="display">Enciende tu<br>propia nube.</h1>
+    <p class="hero-sub">Mixtli es una nube privada que tú controlas. Elige un plan, tu escritorio virtual se enciende solo, y entras directo desde el navegador — sin instalar nada.</p>
+    <div class="cta-fila">
+      <a href="#planes" class="btn-primario">Ver planes</a>
+      <a href="acceso.html" class="btn-secundario">Acceder a mi nodo</a>
+    </div>
+  </div>
+</section>
+
+<div class="divisor"><span></span></div>
+
+<section id="capacidades">
+  <div class="envoltura">
+    <div class="encabezado-seccion">
+      <div class="eyebrow">Capacidades</div>
+      <h2 class="display">Lo que obtienes</h2>
+    </div>
+    <div class="grid-capacidades">
+      <div class="capacidad">
+        <div class="icono">◱</div>
+        <h3>Tu VM, solo tuya</h3>
+        <p>Cada cliente vive aislado en su propia red. Nadie más ve tu escritorio ni tus archivos.</p>
+      </div>
+      <div class="capacidad">
+        <div class="icono">◈</div>
+        <h3>Vigilado en todo momento</h3>
+        <p>Firewall, IDS/IPS y correlación de eventos corriendo en segundo plano, filtrando el tráfico antes de que llegue a ti.</p>
+      </div>
+      <div class="capacidad">
+        <div class="icono">◇</div>
+        <h3>Sin instalar nada</h3>
+        <p>Entra desde cualquier navegador. Sin clientes VPN, sin apps, sin configuración.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="como-funciona">
+  <div class="envoltura">
+    <div class="encabezado-seccion">
+      <div class="eyebrow">Cómo funciona</div>
+      <h2 class="display">Tres pasos, un minuto</h2>
+    </div>
+    <div class="pasos">
+      <div class="paso">
+        <div class="numero">01</div>
+        <h3>Elige tu plan</h3>
+        <p>Básico, Intermedio o Avanzado. RAM, núcleos y disco a tu medida.</p>
+      </div>
+      <div class="paso">
+        <div class="numero">02</div>
+        <h3>Tu VM se enciende sola</h3>
+        <p>En segundos, tu servidor queda listo y esperando, sin que muevas un dedo.</p>
+      </div>
+      <div class="paso">
+        <div class="numero">03</div>
+        <h3>Entra desde el navegador</h3>
+        <p>Con tu usuario y tu llave, ves directo tu escritorio. Nada más, nadie más.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divisor"><span></span></div>
+
+<section id="planes">
+  <div class="envoltura">
+    <div class="encabezado-seccion">
+      <div class="eyebrow">Planes</div>
+      <h2 class="display">Elige tu tamaño</h2>
+      <p>Cada plan es una VM completa, aislada, lista para lo que necesites.</p>
+    </div>
+    <div class="grid-planes">
+      <div class="plan">
+        <h3 class="display">Básico</h3>
+        <p class="desc-plan">Para pruebas rápidas y proyectos ligeros.</p>
+        <ul class="specs">
+          <li><span>Núcleos</span><span>2 vCPU</span></li>
+          <li><span>Memoria</span><span>2048 MB</span></li>
+          <li><span>Disco</span><span>20 GB</span></li>
+        </ul>
+        <a href="contratar.html" class="btn-plan">Contratar</a>
+      </div>
+      <div class="plan destacado">
+        <h3 class="display">Intermedio</h3>
+        <p class="desc-plan">El balance justo entre potencia y costo.</p>
+        <ul class="specs">
+          <li><span>Núcleos</span><span>4 vCPU</span></li>
+          <li><span>Memoria</span><span>4096 MB</span></li>
+          <li><span>Disco</span><span>40 GB</span></li>
+        </ul>
+        <a href="contratar.html" class="btn-plan">Contratar</a>
+      </div>
+      <div class="plan">
+        <h3 class="display">Avanzado</h3>
+        <p class="desc-plan">Para cargas de trabajo exigentes.</p>
+        <ul class="specs">
+          <li><span>Núcleos</span><span>6 vCPU</span></li>
+          <li><span>Memoria</span><span>8192 MB</span></li>
+          <li><span>Disco</span><span>80 GB</span></li>
+        </ul>
+        <a href="contratar.html" class="btn-plan">Contratar</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="seguridad">
+  <div class="envoltura">
+    <div class="seguridad-caja">
+      <div class="eyebrow">Seguridad</div>
+      <h2 class="display">Seguridad de verdad, no de adorno</h2>
+      <p>Firewall perimetral, inspección profunda de paquetes y correlación de eventos protegiendo cada VM, con aislamiento total entre clientes.</p>
+      <div class="badges">
+        <span class="badge">OPNsense</span>
+        <span class="badge">Suricata IDS/IPS</span>
+        <span class="badge">Wazuh SIEM</span>
+        <span class="badge">VLAN aislada</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Mixtli — proyecto académico de infraestructura en la nube.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,94 @@
+services:
+  guac-postgres:
+    image: postgres:15-alpine
+    container_name: mixtli-guac-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${GUACAMOLE_DB:-guacamole_db}
+      POSTGRES_USER: ${GUACAMOLE_DB_USER:-guacamole_user}
+      POSTGRES_PASSWORD: ${GUACAMOLE_DB_PASS}
+    volumes:
+      - guac-db-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    networks:
+      mixtli-net:
+        ipv4_address: 172.18.0.10
+
+  guacd:
+    image: guacamole/guacd:1.5.5
+    container_name: mixtli-guacd
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      GUACD_LOG_LEVEL: debug
+
+
+  guacamole:
+    image: guacamole/guacamole:1.5.5
+    container_name: mixtli-guacamole
+    restart: unless-stopped
+    environment:
+      GUACD_HOSTNAME: 172.18.0.1
+      POSTGRES_HOSTNAME: guac-postgres
+      POSTGRES_DATABASE: ${GUACAMOLE_DB:-guacamole_db}
+      POSTGRES_USER: ${GUACAMOLE_DB_USER:-guacamole_user}
+      POSTGRES_PASSWORD: ${GUACAMOLE_DB_PASS}
+    depends_on:
+      - guacd
+      - guac-postgres
+    networks:
+      mixtli-net:
+        ipv4_address: 172.18.0.12
+
+  backend:
+    build: ./backend
+    container_name: mixtli-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - guacamole
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    network_mode: host
+
+  frontend:
+    build: ./frontend
+    container_name: mixtli-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - guacamole
+    networks:
+      mixtli-net:
+        ipv4_address: 172.18.0.13
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: mixtli-n8n
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - N8N_PORT=5678
+      - GENERIC_TIMEZONE=America/Tijuana
+      - N8N_SECURE_COOKIE=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+networks:
+  mixtli-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/24
+          gateway: 172.18.0.1
+
+volumes:
+  guac-db-data:
+  n8n_data:

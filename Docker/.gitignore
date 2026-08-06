@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+*.bak
+*.bak2
+init/01-initdb.sql
+n8n_data/
+guac-db-data/
+node_modules/
+.docker/

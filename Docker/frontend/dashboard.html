@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mixtli — Panel de Administración</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --negro: #000000;
+    --negro-panel: #131110;
+    --negro-card: #1a1814;
+    --dorado: #E8A63C;
+    --dorado-claro: #F5C563;
+    --dorado-tenue: rgba(232, 166, 60, 0.14);
+    --borde: rgba(232, 166, 60, 0.22);
+    --texto: #F5F1E8;
+    --texto-tenue: #8f887a;
+    --critico: #e5534b;
+    --alto: #f0883e;
+    --medio: #d4a843;
+    --bajo: #58a6ff;
+    --exito: #3fb950;
+    --info: #58a6ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--negro);
+    color: var(--texto);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+  .mono { font-family: "SF Mono", "Cascadia Code", Consolas, monospace; }
+
+  /* ===== HEADER ===== */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--borde);
+    background: var(--negro-panel);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-left img { height: 28px; }
+  .marca {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 16px;
+    color: var(--dorado);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .marca span { color: var(--texto-tenue); font-family: 'Inter', sans-serif; font-size: 12px; text-transform: none; letter-spacing: 0; margin-left: 8px; }
+  .estado-vivo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--texto-tenue);
+  }
+  .punto {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--exito);
+    animation: pulso 2s infinite;
+  }
+  @keyframes pulso { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .btn-salir {
+    font-size: 12px;
+    color: var(--texto-tenue);
+    text-decoration: none;
+    padding: 6px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .btn-salir:hover { border-color: var(--dorado); color: var(--dorado); }
+
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--borde);
+    background: var(--negro-panel);
+    padding: 0 24px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--texto-tenue);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--texto); }
+  .tab.activo { color: var(--dorado); border-bottom-color: var(--dorado); }
+
+  /* ===== MAIN ===== */
+  main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .seccion { display: none; }
+  .seccion.activa { display: block; }
+
+  /* ===== CARDS GRID ===== */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--negro-card);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 18px 16px;
+  }
+  .card .num {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: "SF Mono", Consolas, monospace;
+    line-height: 1;
+  }
+  .card .label { font-size: 11px; color: var(--texto-tenue); margin-top: 4px; letter-spacing: 0.02em; }
+  .card.critico .num { color: var(--critico); }
+  .card.alto .num { color: var(--alto); }
+  .card.medio .num { color: var(--medio); }
+  .card.bajo .num { color: var(--bajo); }
+  .card.exito .num { color: var(--exito); }
+  .card.info .num { color: var(--info); }
+
+  /* ===== CHARTS ===== */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--negro-card);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .chart-card h3 {
+    font-size: 13px;
+    color: var(--texto-tenue);
+    margin-bottom: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .chart-container { height: 220px; position: relative; }
+
+  /* ===== TABLES ===== */
+  .tabla-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .tabla-header h3 { font-size: 14px; font-weight: 600; }
+  .tabla-header .badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: var(--dorado-tenue);
+    color: var(--dorado);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--texto-tenue);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--borde);
+  }
+  table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(232,166,60,0.08);
+    color: var(--texto);
+  }
+  table tr:hover td { background: rgba(232,166,60,0.03); }
+
+  .status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .status-dot.running { background: var(--exito); }
+  .status-dot.stopped { background: var(--critico); }
+  .status-dot.active { background: var(--exito); }
+
+  .sev-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .sev-badge.critical { background: rgba(229,83,75,0.15); color: var(--critico); }
+  .sev-badge.high { background: rgba(240,136,62,0.15); color: var(--alto); }
+  .sev-badge.medium { background: rgba(212,168,67,0.15); color: var(--medio); }
+  .sev-badge.low { background: rgba(88,166,255,0.15); color: var(--bajo); }
+
+  .vacio {
+    text-align: center;
+    color: var(--texto-tenue);
+    padding: 40px;
+    font-size: 13px;
+  }
+
+  /* ===== ALERT LIST ===== */
+  .alerta-item {
+    display: grid;
+    grid-template-columns: 3px 80px 80px 1fr 120px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(232,166,60,0.08);
+    font-size: 13px;
+  }
+  .alerta-item:hover { background: rgba(232,166,60,0.03); }
+  .barra-sev { align-self: stretch; border-radius: 2px; width: 3px; }
+  .barra-sev.critical { background: var(--critico); }
+  .barra-sev.high { background: var(--alto); }
+  .barra-sev.medium { background: var(--medio); }
+  .barra-sev.low { background: var(--bajo); }
+  .meta-alerta { text-align: right; font-size: 11px; color: var(--texto-tenue); }
+
+  .filtros {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .filtro-btn {
+    background: var(--negro-card);
+    border: 1px solid var(--borde);
+    color: var(--texto-tenue);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filtro-btn.activo { border-color: var(--dorado); color: var(--dorado); background: var(--dorado-tenue); }
+
+  @media (max-width: 768px) {
+    .alerta-item { grid-template-columns: 3px 1fr; }
+    .alerta-item .sev-badge, .alerta-item .fuente-badge { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="icon.jpg" alt="Mixtli">
+    <div class="marca">MIXTLI <span>Panel de Administración</span></div>
+  </div>
+  <div class="estado-vivo"><span class="punto"></span> actualizando cada 15s</div>
+  <a href="index.html" class="btn-salir">Salir al sitio</a>
+</header>
+
+<div class="tabs">
+  <div class="tab activo" data-tab="overview">Resumen</div>
+  <div class="tab" data-tab="seguridad">Seguridad</div>
+  <div class="tab" data-tab="infra">Infraestructura</div>
+  <div class="tab" data-tab="vulnerabilidades">Vulnerabilidades</div>
+  <div class="tab" data-tab="clientes">Clientes</div>
+</div>
+
+<main>
+
+  <!-- ===== TAB: RESUMEN ===== -->
+  <div class="seccion activa" id="sec-overview">
+    <div class="cards" id="resumenCards">
+      <div class="card"><div class="num">—</div><div class="label">Total alertas 24h</div></div>
+      <div class="card critico"><div class="num">—</div><div class="label">Severidad alta</div></div>
+      <div class="card exito"><div class="num">—</div><div class="label">VMs activas</div></div>
+      <div class="card info"><div class="num">—</div><div class="label">Agentes Wazuh</div></div>
+      <div class="card medio"><div class="num">—</div><div class="label">Vulnerabilidades</div></div>
+      <div class="card"><div class="num">—</div><div class="label">Sesiones Guacamole</div></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Alertas por severidad</h3>
+        <div class="chart-container"><canvas id="chartSevOverview"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Origen de alertas</h3>
+        <div class="chart-container"><canvas id="chartFuenteOverview"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="tabla-header">
+        <h3>Últimas alertas</h3>
+        <span class="badge">Tiempo real</span>
+      </div>
+      <div id="ultimasAlertas"><div class="vacio">Cargando alertas...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: SEGURIDAD ===== -->
+  <div class="seccion" id="sec-seguridad">
+    <div class="cards" id="seguridadCards"></div>
+
+    <div class="filtros">
+      <button class="filtro-btn activo" data-fuente="">Todas</button>
+      <button class="filtro-btn" data-fuente="suricata">Suricata</button>
+      <button class="filtro-btn" data-fuente="wazuh">Wazuh</button>
+    </div>
+
+    <div class="chart-card">
+      <div class="tabla-header">
+        <h3>Alertas detalladas</h3>
+      </div>
+      <div id="alertasDetalladas"><div class="vacio">Cargando...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== TAB: INFRAESTRUCTURA ===== -->
+  <div class="seccion" id="sec-infra">
+    <div class="cards" id="infraCards">
+      <div class="card exito"><div class="num">—</div><div class="label">VMs corriendo</div></div>
+      <div class="card"><div class="num">—</div><div class="label">VMs detenidas</div></div>
+      <div class="card info"><div class="num">—</div><div class="label">Total VMs</div></div>
+      <div class="card medio"><div class="num">—</div><div class="label">Plantillas</div></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="tabla-header">
+        <h3>Máquinas virtuales en Proxmox</h3>
+        <span class="badge" id="proxmoxNodo">—</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Nombre</th><th>Estado</th><th>RAM</th><th>CPU</th><th>Disco</th></tr>
+        </thead>
+        <tbody id="tablaVMs">
+          <tr><td colspan="6" class="vacio">Cargando VMs...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== TAB: VULNERABILIDADES ===== -->
+  <div class="seccion" id="sec-vulnerabilidades">
+    <div class="cards" id="vulnCards">
+      <div class="card critico"><div class="num">—</div><div class="label">Críticas</div></div>
+      <div class="card alto"><div class="num">—</div><div class="label">Altas</div></div>
+      <div class="card medio"><div class="num">—</div><div class="label">Medias</div></div>
+      <div class="card bajo"><div class="num">—</div><div class="label">Bajas</div></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Distribución de vulnerabilidades</h3>
+        <div class="chart-container"><canvas id="chartVuln"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Top paquetes vulnerables</h3>
+        <div class="chart-container"><canvas id="chartPkgs"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="tabla-header">
+        <h3>Agentes escaneados</h3>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Agente</th><th>OS</th><th>Estado</th><th>Vulnerabilidades</th></tr>
+        </thead>
+        <tbody id="tablaAgentes">
+          <tr><td colspan="4" class="vacio">Cargando agentes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== TAB: CLIENTES ===== -->
+  <div class="seccion" id="sec-clientes">
+    <div class="cards" id="clienteCards">
+      <div class="card exito"><div class="num">—</div><div class="label">Conexiones activas</div></div>
+      <div class="card info"><div class="num">—</div><div class="label">Usuarios registrados</div></div>
+      <div class="card"><div class="num">—</div><div class="label">Conexiones totales</div></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="tabla-header">
+        <h3>Conexiones de clientes en Guacamole</h3>
+        <span class="badge">Apache Guacamole</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Conexión</th><th>Protocolo</th><th>Estado</th><th>Último acceso</th></tr>
+        </thead>
+        <tbody id="tablaConexiones">
+          <tr><td colspan="4" class="vacio">Cargando conexiones...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ===== CONFIG GLOBAL =====
+Chart.defaults.color = '#8f887a';
+Chart.defaults.font.family = 'Inter, sans-serif';
+const API = '/api';
+let fuenteActual = '';
+let chartSev, chartFte, chartVuln, chartPkgs;
+
+// ===== TABS =====
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('activo'));
+    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+    tab.classList.add('activo');
+    document.getElementById('sec-' + tab.dataset.tab).classList.add('activa');
+  });
+});
+
+// ===== FILTROS DE ALERTAS =====
+document.querySelectorAll('.filtro-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    fuenteActual = btn.dataset.fuente;
+    cargarAlertas();
+  });
+});
+
+// ===== HELPERS =====
+function formatoHora(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+
+function sevClase(sev) {
+  if (!sev) return 'medium';
+  const s = sev.toLowerCase();
+  if (s.includes('crit') || s.includes('alta') || s === 'high') return 'critical';
+  if (s.includes('high') || s.includes('alto')) return 'high';
+  if (s.includes('med')) return 'medium';
+  return 'low';
+}
+
+// ===== CARGAR RESUMEN ALERTAS =====
+async function cargarResumen() {
+  try {
+    const res = await fetch(API + '/alertas/resumen');
+    const r = await res.json();
+    document.getElementById('resumenCards').innerHTML = `
+      <div class="card"><div class="num">${r.total || 0}</div><div class="label">Total alertas 24h</div></div>
+      <div class="card critico"><div class="num">${r.altas || 0}</div><div class="label">Severidad alta</div></div>
+      <div class="card exito"><div class="num">—</div><div class="label">VMs activas</div></div>
+      <div class="card info"><div class="num">1</div><div class="label">Agentes Wazuh</div></div>
+      <div class="card medio"><div class="num">561</div><div class="label">Vulnerabilidades</div></div>
+      <div class="card"><div class="num">—</div><div class="label">Sesiones Guacamole</div></div>
+    `;
+    document.getElementById('seguridadCards').innerHTML = `
+      <div class="card"><div class="num">${r.total || 0}</div><div class="label">Total 24h</div></div>
+      <div class="card critico"><div class="num">${r.altas || 0}</div><div class="label">Alta</div></div>
+      <div class="card medio"><div class="num">${r.medias || 0}</div><div class="label">Media</div></div>
+      <div class="card bajo"><div class="num">${r.bajas || 0}</div><div class="label">Baja</div></div>
+      <div class="card"><div class="num">${r.suricata || 0}</div><div class="label">Suricata</div></div>
+      <div class="card"><div class="num">${r.wazuh || 0}</div><div class="label">Wazuh</div></div>
+    `;
+    actualizarCharts(r);
+  } catch(e) { console.error('Error resumen:', e); }
+}
+
+// ===== CARGAR ALERTAS =====
+async function cargarAlertas() {
+  try {
+    const url = fuenteActual ? `${API}/alertas?fuente=${fuenteActual}&limite=15` : `${API}/alertas?limite=15`;
+    const res = await fetch(url);
+    const alertas = await res.json();
+    
+    const renderAlertas = (containerId, limite) => {
+      const items = alertas.slice(0, limite);
+      const cont = document.getElementById(containerId);
+      if (!items.length) { cont.innerHTML = '<div class="vacio">Sin alertas para este filtro.</div>'; return; }
+      cont.innerHTML = items.map(a => `
+        <div class="alerta-item">
+          <div class="barra-sev ${sevClase(a.severidad_texto)}"></div>
+          <span class="sev-badge ${sevClase(a.severidad_texto)}">${a.severidad_texto || '—'}</span>
+          <span style="font-size:11px;color:var(--texto-tenue)">${a.fuente || '—'}</span>
+          <span>${a.firma || '—'}</span>
+          <span class="meta-alerta">${a.ip_origen || '—'}<br>${formatoHora(a.timestamp)}</span>
+        </div>
+      `).join('');
+    };
+    
+    renderAlertas('ultimasAlertas', 5);
+    renderAlertas('alertasDetalladas', 15);
+  } catch(e) {
+    document.getElementById('ultimasAlertas').innerHTML = '<div class="vacio">No se pudo conectar con el backend.</div>';
+  }
+}
+
+// ===== CARGAR VMS =====
+async function cargarVMs() {
+  try {
+    const res = await fetch(API + '/vms', { headers: { 'X-Admin-Key': 'MixtliAdmin2026!' } });
+    const vms = await res.json();
+    const running = vms.filter(v => v.estado === 'running').length;
+    const stopped = vms.filter(v => v.estado === 'stopped').length;
+    const templates = vms.filter(v => v.estado === 'template' || v.nombre?.includes('template')).length;
+    
+    document.getElementById('infraCards').innerHTML = `
+      <div class="card exito"><div class="num">${running}</div><div class="label">VMs corriendo</div></div>
+      <div class="card critico"><div class="num">${stopped}</div><div class="label">VMs detenidas</div></div>
+      <div class="card info"><div class="num">${vms.length}</div><div class="label">Total VMs</div></div>
+      <div class="card medio"><div class="num">${templates}</div><div class="label">Plantillas</div></div>
+    `;
+    
+    // Actualizar card de VMs activas en el resumen
+    const vmCard = document.querySelector('#resumenCards .card.exito');
+    if (vmCard) vmCard.querySelector('.num').textContent = running;
+    
+    document.getElementById('proxmoxNodo').textContent = 'proxmox-lab';
+    document.getElementById('tablaVMs').innerHTML = vms.map(v => `
+      <tr>
+        <td class="mono">${v.vmid}</td>
+        <td>${v.nombre}</td>
+        <td><span class="status-dot ${v.estado === 'running' ? 'running' : 'stopped'}"></span>${v.estado}</td>
+        <td class="mono">${v.ram_mb} MB</td>
+        <td class="mono">${v.cores} vCPU</td>
+        <td class="mono">${v.disco_gb} GB</td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    document.getElementById('tablaVMs').innerHTML = '<tr><td colspan="6" class="vacio">Error al conectar con Proxmox</td></tr>';
+  }
+}
+
+// ===== CHARTS =====
+function inicializarCharts() {
+  const optsDonut = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'right', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle' } } }
+  };
+  const optsBar = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, grid: { color: 'rgba(232,166,60,0.08)' } }, x: { grid: { display: false } } }
+  };
+
+  chartSev = new Chart(document.getElementById('chartSevOverview'), {
+    type: 'doughnut',
+    data: { labels: ['Alta','Media','Baja'], datasets: [{ data: [0,0,0], backgroundColor: ['#e5534b','#d4a843','#58a6ff'], borderColor: '#131110', borderWidth: 3 }] },
+    options: optsDonut
+  });
+
+  chartFte = new Chart(document.getElementById('chartFuenteOverview'), {
+    type: 'bar',
+    data: { labels: ['Suricata','Wazuh'], datasets: [{ data: [0,0], backgroundColor: ['#E8A63C','#8f887a'], borderRadius: 6 }] },
+    options: optsBar
+  });
+
+  chartVuln = new Chart(document.getElementById('chartVuln'), {
+    type: 'doughnut',
+    data: { labels: ['Críticas','Altas','Medias','Bajas'], datasets: [{ data: [31,192,265,4], backgroundColor: ['#e5534b','#f0883e','#d4a843','#58a6ff'], borderColor: '#131110', borderWidth: 3 }] },
+    options: optsDonut
+  });
+
+  chartPkgs = new Chart(document.getElementById('chartPkgs'), {
+    type: 'bar',
+    data: {
+      labels: ['linux-image','vim','vim-common','vim-runtime','vim-tiny'],
+      datasets: [{ data: [304,23,23,23,23], backgroundColor: '#E8A63C', borderRadius: 6 }]
+    },
+    options: optsBar
+  });
+}
+
+function actualizarCharts(r) {
+  if (chartSev) { chartSev.data.datasets[0].data = [r.altas||0, r.medias||0, r.bajas||0]; chartSev.update(); }
+  if (chartFte) { chartFte.data.datasets[0].data = [r.suricata||0, r.wazuh||0]; chartFte.update(); }
+}
+
+// ===== CARGAR VULNERABILIDADES =====
+function cargarVulnerabilidades() {
+  document.getElementById('vulnCards').innerHTML = `
+    <div class="card critico"><div class="num">31</div><div class="label">Críticas</div></div>
+    <div class="card alto"><div class="num">192</div><div class="label">Altas</div></div>
+    <div class="card medio"><div class="num">265</div><div class="label">Medias</div></div>
+    <div class="card bajo"><div class="num">4</div><div class="label">Bajas</div></div>
+  `;
+  document.getElementById('tablaAgentes').innerHTML = `
+    <tr>
+      <td><span class="status-dot active"></span>debian (001)</td>
+      <td>Debian GNU/Linux 13 (Trixie)</td>
+      <td><span class="sev-badge medium">Activo</span></td>
+      <td class="mono">561</td>
+    </tr>
+  `;
+}
+
+// ===== CARGAR CONEXIONES GUACAMOLE =====
+function cargarConexiones() {
+  document.getElementById('clienteCards').innerHTML = `
+    <div class="card exito"><div class="num">—</div><div class="label">Conexiones activas</div></div>
+    <div class="card info"><div class="num">—</div><div class="label">Usuarios registrados</div></div>
+    <div class="card"><div class="num">—</div><div class="label">Conexiones totales</div></div>
+  `;
+  document.getElementById('tablaConexiones').innerHTML = `<tr><td colspan="4" class="vacio">Las conexiones se gestionan desde Apache Guacamole.<br><a href="/guacamole/" target="_blank" style="color:var(--dorado)">Abrir panel de Guacamole →</a></td></tr>`;
+}
+
+// ===== INIT =====
+inicializarCharts();
+cargarResumen();
+cargarAlertas();
+cargarVMs();
+cargarVulnerabilidades();
+cargarConexiones();
+
+setInterval(() => {
+  cargarResumen();
+  cargarAlertas();
+  cargarVMs();
+}, 15000);
+</script>
+
+</body>
+</html>

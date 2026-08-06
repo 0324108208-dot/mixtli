@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mixtli — Acceso a tu nodo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --negro: #000000;
+    --negro-panel: #131110;
+    --negro-input: #0a0908;
+    --dorado: #E8A63C;
+    --dorado-claro: #F5C563;
+    --dorado-tenue: rgba(232, 166, 60, 0.14);
+    --borde: rgba(232, 166, 60, 0.22);
+    --texto: #F5F1E8;
+    --texto-tenue: #8f887a;
+    --error: #e5534b;
+    --exito: #3fb950;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--negro);
+    color: var(--texto);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+  }
+
+  .resplandor {
+    position: fixed;
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, var(--dorado-tenue) 0%, rgba(232,166,60,0.04) 40%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .btn-volver {
+    position: fixed;
+    top: 20px;
+    left: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-tenue);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+    transition: color 0.15s;
+  }
+  .btn-volver:hover { color: var(--dorado); }
+  .btn-volver::before { content: '←'; font-size: 16px; }
+
+  .tarjeta {
+    background: var(--negro-panel);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .logo-container img {
+    height: 42px;
+    width: auto;
+  }
+  .marca {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--dorado);
+    text-transform: uppercase;
+  }
+
+  .subtitulo {
+    color: var(--texto-tenue);
+    font-size: 14px;
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--texto-tenue);
+    margin-bottom: 6px;
+    margin-top: 20px;
+    letter-spacing: 0.02em;
+  }
+
+  input {
+    width: 100%;
+    background: var(--negro-input);
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 13px 14px;
+    color: var(--texto);
+    font-size: 15px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  input::placeholder { color: rgba(143,136,122,0.5); }
+  input:focus {
+    outline: none;
+    border-color: var(--dorado);
+  }
+
+  .btn-entrar {
+    width: 100%;
+    margin-top: 28px;
+    background: var(--dorado);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Archivo Black', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-entrar:hover { background: var(--dorado-claro); transform: translateY(-1px); }
+  .btn-entrar:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .mensaje {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--error);
+    display: none;
+    text-align: center;
+  }
+
+  .separador {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+    color: var(--texto-tenue);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .separador::before, .separador::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--borde);
+  }
+
+  .footer-text {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(143,136,122,0.5);
+    letter-spacing: 0.04em;
+  }
+
+  /* ===== VISOR DE SESIÓN ===== */
+  .visor {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 100;
+  }
+  .visor iframe {
+    width: 100%;
+    height: calc(100% - 44px);
+    margin-top: 44px;
+    border: none;
+  }
+  .barra-visor {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    background: var(--negro-panel);
+    border-bottom: 1px solid var(--borde);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 13px;
+    z-index: 101;
+  }
+  .barra-visor .marca-mini {
+    font-family: 'Archivo Black', sans-serif;
+    color: var(--dorado);
+    font-size: 14px;
+    letter-spacing: 0.04em;
+  }
+  .barra-visor .estado {
+    color: var(--exito);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .barra-visor .estado::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--exito);
+    animation: pulso 2s infinite;
+  }
+  @keyframes pulso {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .btn-cerrar {
+    cursor: pointer;
+    color: var(--texto-tenue);
+    font-size: 13px;
+    padding: 4px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+    background: none;
+    transition: all 0.15s;
+  }
+  .btn-cerrar:hover { border-color: var(--error); color: var(--error); }
+
+  @media (max-width: 540px) {
+    .tarjeta { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="resplandor"></div>
+<a href="index.html" class="btn-volver">Volver al inicio</a>
+
+<div class="tarjeta" id="formulario">
+  <div class="logo-container">
+    <img src="Logo_proyecto_recortado.png" alt="Mixtli">
+    <span class="marca">Mixtli</span>
+  </div>
+  <p class="subtitulo">Ingresa la llave de acceso que se te entregó al contratar tu servicio para acceder a tu nodo.</p>
+
+  <label for="usuario">Usuario de acceso</label>
+  <input id="usuario" type="text" autocomplete="off" placeholder="cliente1032">
+
+  <label for="llave">Llave de acceso</label>
+  <input id="llave" type="password" autocomplete="off" placeholder="••••••••••••••••">
+
+  <button class="btn-entrar" id="btnEntrar">Entrar a mi nodo</button>
+  <div class="mensaje" id="mensajeError"></div>
+
+  <div class="separador">Mixtli IaaS</div>
+
+  <p class="footer-text">
+    Tu sesión es privada y aislada. Solo tú tienes acceso a tu servidor.<br>
+    © 2026 Mixtli — Infraestructura como Servicio
+  </p>
+</div>
+
+<!-- Visor de sesión remota -->
+<div class="visor" id="visor">
+  <div class="barra-visor">
+    <span class="marca-mini">MIXTLI</span>
+    <span class="estado">Sesión activa</span>
+    <button class="btn-cerrar" id="cerrarSesion">Cerrar sesión</button>
+  </div>
+  <iframe id="iframeGuacamole" src=""></iframe>
+</div>
+
+<script>
+const btnEntrar = document.getElementById('btnEntrar');
+const mensajeError = document.getElementById('mensajeError');
+
+async function entrar() {
+  const usuario = document.getElementById('usuario').value.trim();
+  const llave = document.getElementById('llave').value;
+
+  if (!usuario || !llave) {
+    mostrarError('Completa usuario y llave de acceso.');
+    return;
+  }
+
+  // --- Acceso de administrador al dashboard de seguridad ---
+  if (usuario === 'admin' && llave === 'mixtli2026') {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  btnEntrar.disabled = true;
+  btnEntrar.textContent = 'CONECTANDO...';
+  mensajeError.style.display = 'none';
+
+  try {
+    const resp = await fetch('/guacamole/api/tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `username=${encodeURIComponent(usuario)}&password=${encodeURIComponent(llave)}`,
+    });
+
+    if (!resp.ok) {
+      mostrarError('Usuario o llave incorrectos. Verifica tus credenciales.');
+      resetBoton();
+      return;
+    }
+
+    document.getElementById('iframeGuacamole').src = '/guacamole/';
+    document.getElementById('formulario').style.display = 'none';
+    document.getElementById('visor').style.display = 'block';
+  } catch (e) {
+    mostrarError('No se pudo conectar al servidor. Intenta de nuevo.');
+    resetBoton();
+  }
+}
+
+function mostrarError(texto) {
+  mensajeError.textContent = texto;
+  mensajeError.style.display = 'block';
+}
+
+function resetBoton() {
+  btnEntrar.disabled = false;
+  btnEntrar.textContent = 'ENTRAR A MI NODO';
+}
+
+btnEntrar.addEventListener('click', entrar);
+document.getElementById('llave').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') entrar();
+});
+
+document.getElementById('cerrarSesion').addEventListener('click', () => {
+  document.getElementById('visor').style.display = 'none';
+  document.getElementById('formulario').style.display = 'block';
+  document.getElementById('iframeGuacamole').src = '';
+  document.getElementById('llave').value = '';
+  resetBoton();
+});
+</script>
+
+</body>
+</html>

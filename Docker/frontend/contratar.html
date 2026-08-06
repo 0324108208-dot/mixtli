@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mixtli — Crear tu nodo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --negro: #000000;
+    --negro-panel: #131110;
+    --negro-input: #0a0908;
+    --dorado: #E8A63C;
+    --dorado-claro: #F5C563;
+    --dorado-tenue: rgba(232, 166, 60, 0.14);
+    --borde: rgba(232, 166, 60, 0.22);
+    --texto: #F5F1E8;
+    --texto-tenue: #8f887a;
+    --error: #e5534b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--negro);
+    color: var(--texto);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .display { font-family: 'Archivo Black', 'Inter', sans-serif; text-transform: uppercase; letter-spacing: -0.01em; }
+  .mono { font-family: "SF Mono", "Cascadia Code", Consolas, monospace; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--dorado); outline-offset: 3px; }
+
+  header {
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--borde);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header img { height: 30px; }
+  header a.volver { font-size: 13.5px; color: var(--texto-tenue); }
+  header a.volver:hover { color: var(--dorado); }
+
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 56px 24px 100px;
+  }
+
+  .eyebrow {
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dorado);
+    margin-bottom: 10px;
+  }
+  h1.display { font-size: clamp(28px, 5vw, 40px); margin-bottom: 40px; }
+
+  .paso {
+    margin-bottom: 44px;
+  }
+  .paso-titulo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .paso-num {
+    width: 26px; height: 26px;
+    border: 1px solid var(--dorado);
+    color: var(--dorado);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .paso-titulo h2 { font-size: 16px; font-weight: 600; }
+
+  .planes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .plan-opcion {
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 20px 16px;
+    cursor: pointer;
+    background: var(--negro-panel);
+    transition: border-color 0.15s ease;
+  }
+  .plan-opcion:hover { border-color: rgba(232,166,60,0.5); }
+  .plan-opcion.activo { border-color: var(--dorado); background: rgba(232,166,60,0.06); }
+  .plan-opcion input { display: none; }
+  .plan-opcion .nombre { font-weight: 700; font-size: 15px; margin-bottom: 10px; }
+  .plan-opcion .spec { font-size: 12.5px; color: var(--texto-tenue); font-family: "SF Mono", Consolas, monospace; }
+
+  @media (max-width: 640px) {
+    .planes-grid { grid-template-columns: 1fr; }
+  }
+
+  .so-fijo {
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 16px 18px;
+    background: var(--negro-panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .so-fijo .nombre { font-weight: 600; font-size: 14.5px; }
+  .so-fijo .nota { font-size: 12px; color: var(--texto-tenue); }
+
+  .campo { margin-bottom: 16px; }
+  .campo label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--texto-tenue);
+    margin-bottom: 6px;
+  }
+  .campo input {
+    width: 100%;
+    background: var(--negro-input);
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+    padding: 12px 14px;
+    color: var(--texto);
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .campo input:focus { border-color: var(--dorado); }
+  .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fila-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+
+  .mensaje-error {
+    color: var(--error);
+    font-size: 13px;
+    margin-top: -6px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .btn-confirmar {
+    width: 100%;
+    background: var(--dorado);
+    color: #000;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .btn-confirmar:hover { background: var(--dorado-claro); }
+  .btn-confirmar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .aviso-demo {
+    font-size: 12px;
+    color: var(--texto-tenue);
+    text-align: center;
+    margin-top: 14px;
+  }
+
+  .estado-carga {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--borde);
+    border-top-color: var(--dorado);
+    border-radius: 50%;
+    margin: 0 auto 24px;
+    animation: girar 0.8s linear infinite;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  .estado-carga h3 { font-size: 17px; margin-bottom: 8px; }
+  .estado-carga p { color: var(--texto-tenue); font-size: 13.5px; }
+
+  .panel-exito {
+    display: none;
+    text-align: center;
+  }
+  .check-circulo {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--dorado);
+    color: #000;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 22px;
+  }
+  .panel-exito h2 { font-size: 22px; margin-bottom: 10px; }
+  .panel-exito .sub { color: var(--texto-tenue); font-size: 14px; margin-bottom: 32px; }
+  .caja-credenciales {
+    border: 1px solid var(--dorado);
+    border-radius: 6px;
+    padding: 24px;
+    background: var(--negro-panel);
+    text-align: left;
+    margin-bottom: 24px;
+  }
+  .cred-fila { margin-bottom: 16px; }
+  .cred-fila:last-child { margin-bottom: 0; }
+  .cred-fila label { display: block; font-size: 11.5px; color: var(--texto-tenue); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .cred-valor {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--negro-input);
+    border: 1px solid var(--borde);
+    border-radius: 4px;
+    padding: 10px 14px;
+  }
+  .cred-valor span { font-family: "SF Mono", Consolas, monospace; font-size: 14px; }
+  .cred-valor button {
+    background: none; border: none; color: var(--dorado);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .aviso-temporal {
+    font-size: 12px;
+    color: var(--texto-tenue);
+    margin-bottom: 24px;
+  }
+  .btn-acceder {
+    display: inline-block;
+    background: var(--dorado);
+    color: #000;
+    font-weight: 700;
+    padding: 14px 32px;
+    border-radius: 4px;
+    font-size: 14.5px;
+  }
+  .btn-acceder:hover { background: var(--dorado-claro); }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="icon.jpg" alt="Mixtli">
+  <a href="index.html" class="volver">← Volver</a>
+</header>
+
+<main>
+
+  <div id="vistaFormulario">
+    <div class="eyebrow">Crear nodo</div>
+    <h1 class="display">Enciende tu VM</h1>
+
+    <form id="formContratar">
+
+      <div class="paso">
+        <div class="paso-titulo">
+          <div class="paso-num">1</div>
+          <h2>Elige tu plan</h2>
+        </div>
+        <div class="planes-grid" id="planesGrid">
+          <label class="plan-opcion" data-plan="basico">
+            <input type="radio" name="plan" value="basico">
+            <div class="nombre">Básico</div>
+            <div class="spec">2 vCPU · 2048 MB · 20 GB</div>
+          </label>
+          <label class="plan-opcion activo" data-plan="intermedio">
+            <input type="radio" name="plan" value="intermedio" checked>
+            <div class="nombre">Intermedio</div>
+            <div class="spec">4 vCPU · 4096 MB · 40 GB</div>
+          </label>
+          <label class="plan-opcion" data-plan="avanzado">
+            <input type="radio" name="plan" value="avanzado">
+            <div class="nombre">Avanzado</div>
+            <div class="spec">6 vCPU · 8192 MB · 80 GB</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="paso">
+        <div class="paso-titulo">
+          <div class="paso-num">2</div>
+          <h2>Sistema operativo</h2>
+        </div>
+        <div class="so-fijo">
+          <span class="nombre">Debian 13 (Linux)</span>
+          <span class="nota">Más opciones próximamente</span>
+        </div>
+      </div>
+
+      <div class="paso">
+        <div class="paso-titulo">
+          <div class="paso-num">3</div>
+          <h2>Tus datos</h2>
+        </div>
+        <div class="campo">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" required placeholder="Tu nombre">
+        </div>
+        <div class="campo">
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" required placeholder="tucorreo@ejemplo.com">
+        </div>
+      </div>
+
+      <div class="paso">
+        <div class="paso-titulo">
+          <div class="paso-num">4</div>
+          <h2>Pago</h2>
+        </div>
+        <div class="campo">
+          <label for="tarjeta">Número de tarjeta</label>
+          <input type="text" id="tarjeta" required placeholder="0000 0000 0000 0000" maxlength="19">
+        </div>
+        <div class="fila-3">
+          <div class="campo">
+            <label for="titular">Nombre en la tarjeta</label>
+            <input type="text" id="titular" required placeholder="Como aparece en la tarjeta">
+          </div>
+          <div class="campo">
+            <label for="vencimiento">MM/AA</label>
+            <input type="text" id="vencimiento" required placeholder="MM/AA" maxlength="5">
+          </div>
+          <div class="campo">
+            <label for="cvv">CVV</label>
+            <input type="text" id="cvv" required placeholder="123" maxlength="4">
+          </div>
+        </div>
+      </div>
+
+      <div class="mensaje-error" id="mensajeError"></div>
+
+      <button type="submit" class="btn-confirmar">Confirmar y crear mi nodo</button>
+      <p class="aviso-demo">Formulario de demostración — no se procesa ningún cargo real.</p>
+    </form>
+  </div>
+
+  <div class="estado-carga" id="vistaCarga">
+    <div class="spinner"></div>
+    <h3 id="cargaTitulo">Creando tu VM...</h3>
+    <p id="cargaSub">Esto puede tomar unos segundos.</p>
+  </div>
+
+  <div class="panel-exito" id="vistaExito">
+    <div class="check-circulo">✓</div>
+    <h2 class="display" style="text-transform:none;">Tu nodo está listo</h2>
+    <p class="sub">Guarda estas credenciales — las vas a necesitar para entrar.</p>
+    <div class="caja-credenciales">
+      <div class="cred-fila">
+        <label>Usuario de acceso</label>
+        <div class="cred-valor">
+          <span id="valUsuario">—</span>
+          <button onclick="copiar('valUsuario')" type="button">Copiar</button>
+        </div>
+      </div>
+      <div class="cred-fila">
+        <label>Llave de acceso</label>
+        <div class="cred-valor">
+          <span id="valLlave">—</span>
+          <button onclick="copiar('valLlave')" type="button">Copiar</button>
+        </div>
+      </div>
+    </div>
+    <p class="aviso-temporal">Por ahora estas credenciales se muestran aquí — pronto también te llegarán por correo.</p>
+    <a href="acceso.html" class="btn-acceder">Acceder a mi nodo</a>
+  </div>
+
+</main>
+
+<script>
+const PLANES_INFO = {
+  basico: { ram_mb: 2048, cores: 2, disco_gb: 20 },
+  intermedio: { ram_mb: 4096, cores: 4, disco_gb: 40 },
+  avanzado: { ram_mb: 8192, cores: 6, disco_gb: 80 },
+};
+
+document.querySelectorAll('.plan-opcion').forEach(opcion => {
+  opcion.addEventListener('click', () => {
+    document.querySelectorAll('.plan-opcion').forEach(o => o.classList.remove('activo'));
+    opcion.classList.add('activo');
+  });
+});
+
+document.getElementById('tarjeta').addEventListener('input', (e) => {
+  let v = e.target.value.replace(/\D/g, '').slice(0, 16);
+  e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+});
+document.getElementById('vencimiento').addEventListener('input', (e) => {
+  let v = e.target.value.replace(/\D/g, '').slice(0, 4);
+  if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+  e.target.value = v;
+});
+document.getElementById('cvv').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+});
+
+function mostrarError(texto) {
+  const el = document.getElementById('mensajeError');
+  el.textContent = texto;
+  el.style.display = 'block';
+}
+
+function copiar(id) {
+  const texto = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(texto);
+}
+
+document.getElementById('formContratar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  document.getElementById('mensajeError').style.display = 'none';
+
+  const plan = document.querySelector('input[name="plan"]:checked').value;
+  const nombre = document.getElementById('nombre').value.trim();
+  const correo = document.getElementById('correo').value.trim();
+  const tarjeta = document.getElementById('tarjeta').value.replace(/\s/g, '');
+  const vencimiento = document.getElementById('vencimiento').value;
+  const cvv = document.getElementById('cvv').value;
+
+  if (!nombre || !correo || tarjeta.length < 16 || vencimiento.length < 5 || cvv.length < 3) {
+    mostrarError('Completa todos los campos correctamente.');
+    return;
+  }
+
+  document.getElementById('vistaFormulario').style.display = 'none';
+  document.getElementById('vistaCarga').style.display = 'block';
+
+  try {
+    const resContratar = await fetch('/api/servicios/contratar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre_cliente: nombre,
+        correo: correo,
+        plan: plan,
+        sistema_operativo: 'ubuntu'
+      })
+    });
+
+    if (!resContratar.ok) {
+      throw new Error('No se pudo crear la VM. Intenta de nuevo.');
+    }
+
+    const datos = await resContratar.json();
+    const vmid = datos.vmid;
+
+    document.getElementById('cargaTitulo').textContent = 'Encendiendo tu VM...';
+    document.getElementById('cargaSub').textContent = 'Esperando a que reporte su dirección IP.';
+
+    let intentos = 0;
+    let acceso = null;
+    while (intentos < 12 && !acceso) {
+      await new Promise(r => setTimeout(r, 5000));
+      const resAcceso = await fetch(`/api/servicios/${vmid}/generar-acceso?sistema_operativo=ubuntu&correo=${encodeURIComponent(correo)}`, {
+        method: 'POST'
+      });
+      if (resAcceso.ok) {
+        acceso = await resAcceso.json();
+      }
+      intentos++;
+    }
+
+    if (!acceso) {
+      throw new Error('La VM está tardando más de lo esperado. Intenta acceder en unos minutos desde /acceso.html.');
+    }
+
+    document.getElementById('valUsuario').textContent = acceso.usuario_acceso;
+    document.getElementById('valLlave').textContent = acceso.llave_acceso;
+
+    document.getElementById('vistaCarga').style.display = 'none';
+    document.getElementById('vistaExito').style.display = 'block';
+
+  } catch (err) {
+    document.getElementById('vistaCarga').style.display = 'none';
+    document.getElementById('vistaFormulario').style.display = 'block';
+    mostrarError(err.message || 'Algo salió mal. Intenta de nuevo.');
+  }
+});
+</script>
+
+</body>
+</html>
